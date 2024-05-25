@@ -28,5 +28,5 @@ jobs:
           echo "::set-output name=is_develop::${{ startsWith(github.ref, 'refs/heads/develop') }}"
           echo "::set-output name=is_main::${{ startsWith(github.ref, 'refs/heads/main') }}"
           echo "::set-output name=is_cicd_test::${{ startsWith(github.ref, 'refs/heads/feature/ci-cd') }}"
-          echo "::set-output name=can_deploy_on_dev::${{ or(startsWith(github.ref, 'refs/heads/develop'), startsWith(github.ref, 'refs/heads/hotfix/'), startsWith(github.ref, 'refs/heads/feature/ci-cd')) }}"
-          echo "::set-output name=can_deploy_on_production::${{ or(startsWith(github.ref, 'refs/heads/hotfix/'), startsWith(github.ref, 'refs/heads/release/'), startsWith(github.ref, 'refs/heads/main')) }}"
+          echo "::set-output name=can_deploy_on_dev::${{ or(startsWith(github.ref, 'refs/heads/develop'),  startsWith(github.ref, 'refs/heads/feature/ci-cd')) }}"
+          echo "::set-output name=can_deploy_on_production::${{ or(startsWith(github.ref, 'refs/heads/main')) }}"
