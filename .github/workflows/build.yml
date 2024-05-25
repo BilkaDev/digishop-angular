@@ -1,22 +1,16 @@
 name: Build
 
 on:
-  push:
-    branches:
-      - develop
-      - feature/*
-      - main
-  pull_request:
-    branches:
-      - develop
-      - feature/*
-      - main
+  workflow_run:
+    workflows:
+      - "GitHub Pipelines"
+    types:
+      - completed
 
 jobs:
   check-lint:
     name: Run linter and prettier
     runs-on: ubuntu-20.04
-    needs: set-variables
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
