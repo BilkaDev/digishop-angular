@@ -51,5 +51,11 @@ jobs:
           echo "is_cicd_test=$IS_CICD_TEST" >> $GITHUB_ENV
           echo "can_deploy_on_dev=$CAN_DEPLOY_ON_DEV" >> $GITHUB_ENV
           echo "can_deploy_on_production=$CAN_DEPLOY_ON_PRODUCTION" >> $GITHUB_ENV
-
+      - name: Debug variables
+        run: |
+          echo "is_develop=${{ env.is_develop }}"
+          echo "is_main=${{ env.is_main }}"
+          echo "is_cicd_test=${{ env.is_cicd_test }}"
+          echo "can_deploy_on_dev=${{ env.can_deploy_on_dev }}"
+          echo "can_deploy_on_production=${{ env.can_deploy_on_production }}"
 
