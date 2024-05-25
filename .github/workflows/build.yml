@@ -2,9 +2,8 @@ name: Build
 
 on:
   workflow_run:
-    workflows: [Test]
-    types:
-      - completed
+    workflows: [Pipelines]
+    types: [completed]
 
 jobs:
   check-lint:
