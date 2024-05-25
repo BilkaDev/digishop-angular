@@ -1,0 +1,32 @@
+name: GitHub Pipelines
+
+on:
+  push:
+    branches:
+      - develop
+      - feature/*
+      - main
+  pull_request:
+    branches:
+      - develop
+      - feature/*
+      - main
+
+jobs:
+  set-variables:
+    runs-on: ubuntu-20.04
+    outputs:
+      is_develop: ${{ steps.set-vars.outputs.is_develop }}
+      is_main: ${{ steps.set-vars.outputs.is_main }}
+      is_cicd_test: ${{ steps.set-vars.outputs.is_cicd_test }}
+      can_deploy_on_dev: ${{ steps.set-vars.outputs.can_deploy_on_dev }}
+      can_deploy_on_production: ${{ steps.set-vars.outputs.can_deploy_on_production }}
+    steps:
+      - name: Set variables
+        id: set-vars
+        run: |
+          echo "::set-output name=is_develop::${{ startsWith(github.ref, 'refs/heads/develop') }}"
+          echo "::set-output name=is_main::${{ startsWith(github.ref, 'refs/heads/main') }}"
+          echo "::set-output name=is_cicd_test::${{ startsWith(github.ref, 'refs/heads/feature/ci-cd') }}"
+          echo "::set-output name=can_deploy_on_dev::${{ or(startsWith(github.ref, 'refs/heads/develop'), startsWith(github.ref, 'refs/heads/hotfix/'), startsWith(github.ref, 'refs/heads/feature/ci-cd')) }}"
+          echo "::set-output name=can_deploy_on_production::${{ or(startsWith(github.ref, 'refs/heads/hotfix/'), startsWith(github.ref, 'refs/heads/release/'), startsWith(github.ref, 'refs/heads/main')) }}"
