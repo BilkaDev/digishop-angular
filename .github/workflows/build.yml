@@ -71,7 +71,7 @@ jobs:
         run: npm run build
       - name: Zip files
         run: zip -r ${{ github.run_id }}.zip ./dist/apps/digishop
-      - name: Upload artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: build-artifact
