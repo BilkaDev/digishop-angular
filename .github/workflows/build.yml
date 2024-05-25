@@ -3,7 +3,6 @@ name: Build
 on:
   workflow_run:
     workflows: ["GitHub Pipelines"]
-
     types:
       - completed
 
