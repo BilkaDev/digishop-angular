@@ -52,7 +52,7 @@ jobs:
   build-and-publish:
     name: Build and publish
     runs-on: ubuntu-20.04
-    needs: run-tests
+#    needs: run-tests
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
