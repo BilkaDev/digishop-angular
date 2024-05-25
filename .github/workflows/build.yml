@@ -30,40 +30,42 @@ jobs:
           IS_CICD_TEST=false
           CAN_DEPLOY_ON_DEV=false
           CAN_DEPLOY_ON_PRODUCTION=false
-
           if [[ "${GITHUB_REF}" == "refs/heads/develop" ]]; then
             IS_DEVELOP=true
             CAN_DEPLOY_ON_DEV=true
           fi
-
           if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
             IS_MAIN=true
             CAN_DEPLOY_ON_PRODUCTION=true
           fi
-
           if [[ "${GITHUB_REF}" == refs/heads/feature/ci-cd* ]]; then
             IS_CICD_TEST=true
             CAN_DEPLOY_ON_DEV=true
           fi
-
           echo "is_develop=$IS_DEVELOP" >> $GITHUB_ENV
           echo "is_main=$IS_MAIN" >> $GITHUB_ENV
           echo "is_cicd_test=$IS_CICD_TEST" >> $GITHUB_ENV
           echo "can_deploy_on_dev=$CAN_DEPLOY_ON_DEV" >> $GITHUB_ENV
           echo "can_deploy_on_production=$CAN_DEPLOY_ON_PRODUCTION" >> $GITHUB_ENV
+
+          echo "::set-output name=is_develop::$IS_DEVELOP"
+          echo "::set-output name=is_main::$IS_MAIN"
+          echo "::set-output name=is_cicd_test::$IS_CICD_TEST"
+          echo "::set-output name=can_deploy_on_dev::$CAN_DEPLOY_ON_DEV"
+          echo "::set-output name=can_deploy_on_production::$CAN_DEPLOY_ON_PRODUCTION"
       - name: Debug variables
         run: |
-          echo "is_develop=${{ env.is_develop }}"
-          echo "is_main=${{ env.is_main }}"
-          echo "is_cicd_test=${{ env.is_cicd_test }}"
-          echo "can_deploy_on_dev=${{ env.can_deploy_on_dev }}"
-          echo "can_deploy_on_production=${{ env.can_deploy_on_production }}"
+          echo "is_develop=${{ steps.set-vars.outputs.is_develop }}"
+          echo "is_main=${{ steps.set-vars.outputs.is_main }}"
+          echo "is_cicd_test=${{ steps.set-vars.outputs.is_cicd_test }}"
+          echo "can_deploy_on_dev=${{ steps.set-vars.outputs.can_deploy_on_dev }}"
+          echo "can_deploy_on_production=${{ steps.set-vars.outputs.can_deploy_on_production }}"
 
   check-lint:
     name: Run linter and prettier
     runs-on: ubuntu-20.04
     needs: set-variables
-    if: ${{ env.can_deploy_on_dev == 'true' }}
+    if: ${{ needs.set-variables.outputs.can_deploy_on_dev == 'true' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -84,6 +86,7 @@ jobs:
     name: Run unit tests
     runs-on: ubuntu-20.04
     needs: check-lint
+    if: ${{ needs.check-lint.result == 'success' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -101,10 +104,12 @@ jobs:
           name: test-results
           path: '**/test-report.xml'
           if-no-files-found: warn
+
   build-and-publish:
     name: Build and publish
     runs-on: ubuntu-20.04
     needs: run-tests
+    if: ${{ needs.run-tests.result == 'success' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
