@@ -3,12 +3,12 @@ name: Build
 on:
   push:
     branches:
-      - main
+      - master
       - develop
   pull_request:
     branches:
+      - master
       - develop
-      - main
 
 jobs:
   set-variables:
