@@ -47,11 +47,12 @@ jobs:
           echo "can_deploy_on_dev=$CAN_DEPLOY_ON_DEV" >> $GITHUB_ENV
           echo "can_deploy_on_production=$CAN_DEPLOY_ON_PRODUCTION" >> $GITHUB_ENV
 
-          echo "::set-output name=is_develop::$IS_DEVELOP"
-          echo "::set-output name=is_main::$IS_MAIN"
-          echo "::set-output name=is_cicd_test::$IS_CICD_TEST"
-          echo "::set-output name=can_deploy_on_dev::$CAN_DEPLOY_ON_DEV"
-          echo "::set-output name=can_deploy_on_production::$CAN_DEPLOY_ON_PRODUCTION"
+          echo "is_develop=$IS_DEVELOP" >> $GITHUB_OUTPUT
+          echo "is_main=$IS_MAIN" >> $GITHUB_OUTPUT
+          echo "is_cicd_test=$IS_CICD_TEST" >> $GITHUB_OUTPUT
+          echo "can_deploy_on_dev=$CAN_DEPLOY_ON_DEV" >> $GITHUB_OUTPUT
+          echo "can_deploy_on_production=$CAN_DEPLOY_ON_PRODUCTION" >> $GITHUB_OUTPUT
+
       - name: Debug variables
         run: |
           echo "is_develop=${{ steps.set-vars.outputs.is_develop }}"
