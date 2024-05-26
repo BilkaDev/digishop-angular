@@ -1,11 +1,138 @@
-name: DeployTestCheckWorkflow
+name: Deploy
 
 on:
-  workflow_run:
-    workflows: [Build]
-    types:
-      - completed
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - master
+      - develop
+
 jobs:
+  set-variables:
+    runs-on: ubuntu-20.04
+    outputs:
+      is_develop: ${{ steps.set-vars.outputs.is_develop }}
+      is_master: ${{ steps.set-vars.outputs.is_master }}
+      is_cicd_test: ${{ steps.set-vars.outputs.is_cicd_test }}
+      can_deploy_on_dev: ${{ steps.set-vars.outputs.can_deploy_on_dev }}
+      can_deploy_on_production: ${{ steps.set-vars.outputs.can_deploy_on_production }}
+    steps:
+      - name: Set variables
+        id: set-vars
+        run: |
+          IS_DEVELOP=false
+          IS_MASTER=false
+          IS_CICD_TEST=false
+          CAN_DEPLOY_ON_DEV=false
+          CAN_DEPLOY_ON_PRODUCTION=false
+          if [[ "${GITHUB_REF}" == "refs/heads/develop" ]]; then
+            IS_DEVELOP=true
+            CAN_DEPLOY_ON_DEV=true
+          fi
+          if [[ "${GITHUB_REF}" == "refs/heads/master" ]]; then
+            IS_MASTER=true
+            CAN_DEPLOY_ON_PRODUCTION=true
+          fi
+          if [[ "${GITHUB_REF}" == refs/heads/feature/ci-cd* ]]; then
+            IS_CICD_TEST=true
+            CAN_DEPLOY_ON_DEV=true
+          fi
+          echo "is_develop=$IS_DEVELOP" >> $GITHUB_ENV
+          echo "is_master=$IS_MASTER" >> $GITHUB_ENV
+          echo "is_cicd_test=$IS_CICD_TEST" >> $GITHUB_ENV
+          echo "can_deploy_on_dev=$CAN_DEPLOY_ON_DEV" >> $GITHUB_ENV
+          echo "can_deploy_on_production=$CAN_DEPLOY_ON_PRODUCTION" >> $GITHUB_ENV
+
+          echo "is_develop=$IS_DEVELOP" >> $GITHUB_OUTPUT
+          echo "is_master=$IS_MASTER" >> $GITHUB_OUTPUT
+          echo "is_cicd_test=$IS_CICD_TEST" >> $GITHUB_OUTPUT
+          echo "can_deploy_on_dev=$CAN_DEPLOY_ON_DEV" >> $GITHUB_OUTPUT
+          echo "can_deploy_on_production=$CAN_DEPLOY_ON_PRODUCTION" >> $GITHUB_OUTPUT
+
+      - name: Debug variables
+        run: |
+          echo "is_develop=${{ steps.set-vars.outputs.is_develop }}"
+          echo "is_master=${{ steps.set-vars.outputs.is_master }}"
+          echo "is_cicd_test=${{ steps.set-vars.outputs.is_cicd_test }}"
+          echo "can_deploy_on_dev=${{ steps.set-vars.outputs.can_deploy_on_dev }}"
+          echo "can_deploy_on_production=${{ steps.set-vars.outputs.can_deploy_on_production }}"
+
+  check-lint:
+    name: Run linter and prettier
+    runs-on: ubuntu-20.04
+    needs: set-variables
+    if: ${{ needs.set-variables.outputs.can_deploy_on_dev == 'true' || needs.set-variables.outputs.can_deploy_on_production == 'true' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.12.2"
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint check
+        run: npm run lint:check
+      - name: Prettier check
+        run: npm run prettier:check
+
+  run-tests:
+    name: Run unit tests
+    runs-on: ubuntu-20.04
+    needs: check-lint
+    if: ${{ needs.check-lint.result == 'success' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.12.2"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run unit tests
+        run: npm run test
+      - name: Publish unit test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: test-results
+          path: "**/test-report.xml"
+          if-no-files-found: warn
+
+  build-and-publish:
+    name: Build and publish
+    runs-on: ubuntu-20.04
+    needs: run-tests
+    if: ${{ needs.run-tests.result == 'success' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.12.2"
+      - name: Install dependencies
+        run: npm ci
+      - name: Create config.js file
+        run: |
+          echo "const env = (() => ({
+          apiUrl: 'http://localhost:8888',
+          }))();" > ./apps/digishop/public/config.js
+      - name: Build
+        run: npm run build
+      - name: Zip files
+        run: zip -r ${{ github.run_id }}.zip ./dist/apps/digishop
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-artifact
+          path: ${{ github.run_id }}.zip
+
   deploy:
     name: Deploy on VPS
     runs-on: ubuntu-latest
