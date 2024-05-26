@@ -162,4 +162,4 @@ jobs:
           echo "s66.mydevil.net,128.204.219.135 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBPym/HwhTsEmByk+0PRCrMOsr29xXA8kG5rLTzj5WjMl5DwVf6WdysNAsWw3GcyOzjVQxpVgrakHihnaqth/+yM=" > ~/.ssh/known_hosts
 
       - name: Copy files via SCP
-        run: scp ${{ github.run_id }}.zip ${{ secrets.VPS_USER }}@${{VPS_HOST}}:/domains/digishop.royal622.usermd.net/zip/
+        run: scp ${{ github.run_id }}.zip ${{ secrets.VPS_USER }}@${{secrets.VPS_HOST}}:/domains/digishop.royal622.usermd.net/zip/
