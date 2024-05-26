@@ -21,6 +21,8 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           echo "s66.mydevil.net,128.204.219.135 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBPym/HwhTsEmByk+0PRCrMOsr29xXA8kG5rLTzj5WjMl5DwVf6WdysNAsWw3GcyOzjVQxpVgrakHihnaqth/+yM=" > ~/.ssh/known_hosts
+      - name: Create target directory on VPS
+        run: ssh ${{ secrets.VPS_USER }}@s66.mydevil.net "mkdir -p /domains/digishop.royal622.usermd.net/test/"
 
       - name: Copy files via SCP
         run: scp -r ./* ${{ secrets.VPS_USER}}@s66.mydevil.net:/domains/digishop.royal622.usermd.net/test/
