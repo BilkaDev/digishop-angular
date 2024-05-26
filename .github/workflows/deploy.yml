@@ -1,3 +1,5 @@
+name: Deploy on VPS
+
 on:
   push:
     branches:
@@ -15,6 +17,10 @@ jobs:
         uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Add known hosts
+        run: |
+          mkdir -p ~/.ssh
+          echo "s66.mydevil.net,128.204.219.135 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBPym/HwhTsEmByk+0PRCrMOsr29xXA8kG5rLTzj5WjMl5DwVf6WdysNAsWw3GcyOzjVQxpVgrakHihnaqth/+yM=" > ~/.ssh/known_hosts
 
       - name: Copy files via SCP
         run: scp -r ./* ${{ secrets.VPS_USER}}@s66.mydevil.net:/domains/digishop.royal622.usermd.net/test/
