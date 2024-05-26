@@ -10,7 +10,7 @@
     "lint:fix": "nx run-many --all --target=lint --parallel --fix",
     "format:fix": "nx format:write --configuration ./.prettierrc",
     "format:check": "nx format:check --configuration ./.prettierrc",
-    "prttier:check": "prettier --check 'apps/*/src/**/*.{js,ts}'",
+    "prettier:check": "prettier --check 'apps/*/src/**/*.{js,ts}'",
     "code:check": "npm run format:check && npm run lint:check",
     "code:fix": "npm run format:fix && npm run lint:fix",
     "prepare": "husky"
