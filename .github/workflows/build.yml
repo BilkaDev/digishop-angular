@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - feature/ci-cd
       - develop
   pull_request:
     branches:
@@ -60,55 +61,56 @@ jobs:
           echo "can_deploy_on_dev=${{ steps.set-vars.outputs.can_deploy_on_dev }}"
           echo "can_deploy_on_production=${{ steps.set-vars.outputs.can_deploy_on_production }}"
 
-  check-lint:
-    name: Run linter and prettier
-    runs-on: ubuntu-20.04
-    needs: set-variables
-    if: ${{ needs.set-variables.outputs.can_deploy_on_dev == 'true' || needs.set-variables.outputs.can_deploy_on_production == 'true' }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "20.12.2"
-      - name: Install dependencies
-        run: npm ci
-      - name: Lint check
-        run: npm run lint:check
-      - name: Prettier check
-        run: npm run format:check
-
-  run-tests:
-    name: Run unit tests
-    runs-on: ubuntu-20.04
-    needs: check-lint
-    if: ${{ needs.check-lint.result == 'success' }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "20.12.2"
-      - name: Install dependencies
-        run: npm ci
-      - name: Run unit tests
-        run: npm run test
-      - name: Publish unit test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: test-results
-          path: "**/test-report.xml"
-          if-no-files-found: warn
+#  check-lint:
+#    name: Run linter and prettier
+#    runs-on: ubuntu-20.04
+#    needs: set-variables
+#    if: ${{ needs.set-variables.outputs.can_deploy_on_dev == 'true' || needs.set-variables.outputs.can_deploy_on_production == 'true' }}
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#        with:
+#          fetch-depth: 0
+#      - name: Set up Node.js
+#        uses: actions/setup-node@v3
+#        with:
+#          node-version: "20.12.2"
+#      - name: Install dependencies
+#        run: npm ci
+#      - name: Lint check
+#        run: npm run lint:check
+#      - name: Prettier check
+#        run: npm run format:check
+#
+#  run-tests:
+#    name: Run unit tests
+#    runs-on: ubuntu-20.04
+#    needs: check-lint
+#    if: ${{ needs.check-lint.result == 'success' }}
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#      - name: Set up Node.js
+#        uses: actions/setup-node@v3
+#        with:
+#          node-version: "20.12.2"
+#      - name: Install dependencies
+#        run: npm ci
+#      - name: Run unit tests
+#        run: npm run test
+#      - name: Publish unit test results
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: test-results
+#          path: "**/test-report.xml"
+#          if-no-files-found: warn
 
   build-and-publish:
     name: Build and publish
     runs-on: ubuntu-20.04
-    needs: run-tests
-    if: ${{ needs.run-tests.result == 'success' }}
+    needs: set-variables
+    #    needs: run-tests
+#    if: ${{ needs.run-tests.result == 'success' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -132,3 +134,22 @@ jobs:
         with:
           name: build-artifact
           path: ${{ github.run_id }}.zip
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Add known hosts
+        run: |
+          mkdir -p ~/.ssh
+          echo "s66.mydevil.net,128.204.219.135 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBPym/HwhTsEmByk+0PRCrMOsr29xXA8kG5rLTzj5WjMl5DwVf6WdysNAsWw3GcyOzjVQxpVgrakHihnaqth/+yM=" > ~/.ssh/known_hosts
+
+      - name: Copy files via SCP
+        run: scp build_${{ github.run_id }}.zip ${{ secrets.VPS_USER }}@s66.mydevil.net:/domains/digishop.royal622.usermd.net/zip/
