@@ -163,3 +163,6 @@ jobs:
 
       - name: Copy files via SCP
         run: scp ${{ github.run_id }}.zip ${{ secrets.VPS_USER }}@${{secrets.VPS_HOST}}:domains/digishop.royal622.usermd.net/zip/
+
+      - name: Run deploy script on VPS
+        run: ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'cd domains/digishop.royal622.usermd.net && /bin/bash deploy.sh'
