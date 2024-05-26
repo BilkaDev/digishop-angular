@@ -1,4 +1,4 @@
-name: DeployTest
+name: DeployTestCheckWorkflow
 
 on:
   workflow_run:
