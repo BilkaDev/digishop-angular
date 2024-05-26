@@ -143,6 +143,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: build-artifact
+          path: .
+
+      - name: List downloaded files
+        run: ls -l
+
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.5.3
         with:
